@@ -1,0 +1,47 @@
+{
+  "name": "opencodev2-notification",
+  "version": "1.0.0",
+  "description": "Native OS notifications for OpenCode V2 - know when tasks complete, errors occur, or the AI needs your input",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "build": "bun run build",
+    "dev": "bun run dev",
+    "lint": "bun run lint",
+    "typecheck": "bun run typecheck"
+  },
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "notifications",
+    "macos",
+    "windows",
+    "linux",
+    "typescript"
+  ],
+  "author": "serkanalgur",
+  "license": "MIT",
+  "dependencies": {
+    "@opencode/plugin": "latest"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  },
+  "peerDependencies": {
+    "node-notifier": "^10.0.0"
+  },
+  "peerDependenciesMeta": {
+    "node-notifier": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/serkanalgur/opencodev2-notification.git"
+  },
+  "bugs": {
+    "url": "https://github.com/serkanalgur/opencodev2-notification/issues"
+  },
+  "homepage": "https://github.com/serkanalgur/opencodev2-notification#readme"
+}
