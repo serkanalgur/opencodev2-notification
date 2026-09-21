@@ -27,7 +27,6 @@
     "./tui": "./src/tui.ts"
   },
   "main": "src/index.ts",
-  "tui": "./src/tui.ts",
   "files": [
     "src/",
     "README.md",
