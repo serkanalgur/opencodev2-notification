@@ -24,7 +24,7 @@ This plugin solves that:
 ## Installation
 
 ```bash
-npm install @serkanalgur/opencodev2-notification
+opencode plugin add @serkanalgur/opencodev2-notification
 ```
 
 ### Via opencode.json
