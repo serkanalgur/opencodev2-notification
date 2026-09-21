@@ -41,6 +41,7 @@
     "@opencode/plugin": "^2.0.0",
     "@types/bun": "latest",
     "prettier": "^3.4.0",
+    "tsx": "^4.23.15",
     "typescript": "^5.7.0"
   },
   "peerDependencies": {
