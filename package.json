@@ -5,10 +5,8 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "build": "bun run build",
-    "dev": "bun run dev",
-    "lint": "bun run lint",
-    "typecheck": "bun run typecheck"
+    "test": "bun run test-notification.ts",
+    "typecheck": "bunx tsc --noEmit"
   },
   "keywords": [
     "opencode",
