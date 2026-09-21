@@ -45,6 +45,38 @@ Or copy the plugin files to your `.opencode/plugins/` directory:
 .opencode/plugins/notification/index.ts
 ```
 
+## ⚠️ Required: enable attention (mandatory)
+
+> **This plugin will NOT work unless you turn on OpenCode's `attention` setting first.**
+> The plugin only *uses* OpenCode's built-in notification API — it cannot enable it
+> for you. If attention is off, every notification is silently dropped
+> (`attention_disabled`) and nothing appears on screen or plays a sound.
+
+Add this block to **`~/.config/opencode/cli.json`**:
+
+```jsonc
+{
+  "attention": {
+    "notifications": true,
+    "sound": true,
+    "volume": 0.4
+  }
+}
+```
+
+- `attention.notifications` → shows system notifications (usually when the terminal is **not** focused).
+- `attention.sound` → plays a sound **always** (even while the terminal is focused).
+
+> On macOS, also allow notifications for your terminal app:
+> **System Settings → Notifications → (Terminal/iTerm) → Allow Notifications.**
+
+If attention is disabled, v1.2.6+ prints a clear warning in the terminal when an event fires:
+
+```
+opencodev2-notification: attention is disabled. Enable it in ~/.config/opencode/cli.json:
+  "attention": { "notifications": true, "sound": true }
+```
+
 ## How It Works
 
 > "Notify the human when the AI needs them back, not for every micro-event."
@@ -70,9 +102,12 @@ The plugin automatically:
 | **Windows** | Toast notifications | ✅ Full support |
 | **Linux** | Desktop notifications | ✅ Full support |
 
-## Configuration (Optional)
+## Plugin Configuration (Optional)
 
-Works out of the box. To customize, create `~/.config/opencode/opencodev2-notification.json`:
+The plugin ships with sensible defaults and works right after you've completed the
+[**required `attention` setup**](#required-enable-attention-mandatory) above.
+
+To customize the plugin itself, create `~/.config/opencode/opencodev2-notification.json`:
 
 ```json
 {
