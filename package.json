@@ -23,7 +23,8 @@
   "author": "serkanalgur",
   "type": "module",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./tui": "./src/index.ts"
   },
   "main": "src/index.ts",
   "files": [
