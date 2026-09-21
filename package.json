@@ -28,14 +28,6 @@
     "@types/bun": "latest",
     "typescript": "^5.0.0"
   },
-  "peerDependencies": {
-    "node-notifier": "^10.0.0"
-  },
-  "peerDependenciesMeta": {
-    "node-notifier": {
-      "optional": true
-    }
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/serkanalgur/opencodev2-notification.git"

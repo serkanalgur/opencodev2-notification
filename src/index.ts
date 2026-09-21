@@ -167,26 +167,32 @@ async function getFrontmostApp(): Promise<string | null> {
   )
 }
 
+/**
+ * Detect terminal using environment variables (no external packages!)
+ * Most terminals set these variables automatically
+ */
 async function detectTerminalInfo(
   config: NotifyConfig
 ): Promise<TerminalInfo> {
-  // Try to detect terminal using environment variables
+  // Try to detect terminal using built-in environment variables
+  // These are set by most terminals automatically
   const terminalName =
-    config.terminal ||
-    process.env.TERM_PROGRAM?.toLowerCase() ||
-    process.env.TERM?.toLowerCase() ||
+    config.terminal ||                          // User override
+    process.env.TERM_PROGRAM?.toLowerCase() ||  // iTerm2, Apple_Terminal, etc.
+    process.env.TERM?.toLowerCase() ||          // Generic terminal type
+    process.env.COLORTERM?.toLowerCase() ||     // Some terminals set this
     null
 
   if (!terminalName) {
     return { name: null, bundleId: null, processName: null }
   }
 
-  // Get process name for focus detection
+  // Map common terminal names to process names for focus detection
   const processName =
     TERMINAL_PROCESS_NAMES[terminalName.toLowerCase()] || terminalName
 
-  // Dynamically get bundle ID from macOS
-  const bundleId = await getBundleId(processName)
+  // On macOS, get bundle ID dynamically
+  const bundleId = process.platform === "darwin" ? await getBundleId(processName) : null
 
   return {
     name: terminalName,
@@ -231,71 +237,197 @@ function isQuietHours(config: NotifyConfig): boolean {
 }
 
 // ==========================================
-// NOTIFICATION BACKENDS
+// NOTIFICATION BACKENDS (Native - No Dependencies!)
 // ==========================================
 
+/**
+ * macOS: Use built-in osascript (AppleScript) for notifications
+ * No external packages needed - works on any macOS installation
+ */
 async function sendMacOSNotification(
   title: string,
   message: string,
   subtitle: string | undefined,
   sound: string,
-  bundleId: string | null,
   timeout: number
 ): Promise<void> {
   try {
-    const whichPath = Bun.which("alerter")
-    if (!whichPath) {
-      console.warn(
-        "opencodev2-notification: alerter not found on PATH. Install with: brew install vjeantet/tap/alerter"
-      )
-      return
+    // Build AppleScript for native macOS notification
+    // display notification is built into macOS since 10.0
+    let script = `display notification "${message.replace(/"/g, '\\"')}" with title "${title.replace(/"/g, '\\"')}"`
+    
+    if (subtitle) {
+      script += ` subtitle "${subtitle.replace(/"/g, '\\"')}"`
+    }
+    
+    if (sound) {
+      script += ` sound name "${sound}"`
     }
 
-    const args = ["alerter", "--message", message, "--title", title]
-    if (subtitle) args.push("--subtitle", subtitle)
-    if (sound) args.push("--sound", sound)
-    if (bundleId) args.push("--sender", bundleId)
-    if (timeout > 0) args.push("--timeout", String(timeout))
-
-    const proc = Bun.spawn([whichPath, ...args.slice(1)], {
+    const proc = Bun.spawn(["osascript", "-e", script], {
       stdout: "ignore",
-      stderr: "ignore",
+      stderr: "pipe",
     })
 
     // Don't block on notification
     void proc.exited.then((exitCode) => {
       if (exitCode !== 0) {
-        console.warn(`opencodev2-notification: alerter exited with code ${exitCode}`)
+        console.warn(`opencodev2-notification: osascript exited with code ${exitCode}`)
       }
     })
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error)
-    console.warn(`opencodev2-notification: macOS notification failed (${message})`)
+    const msg = error instanceof Error ? error.message : String(error)
+    console.warn(`opencodev2-notification: macOS notification failed (${msg})`)
   }
 }
 
-async function sendNodeNotifierNotification(
+/**
+ * Windows: Use built-in PowerShell for toast notifications
+ * No external packages needed - PowerShell is built into Windows 7+
+ */
+async function sendWindowsNotification(
   title: string,
   message: string,
-  sound: string,
-  timeout: number
+  sound: string
 ): Promise<void> {
   try {
-    // Dynamic import for node-notifier (may not be installed)
-    const notifier = await import("node-notifier")
-    notifier.default.notify({
-      title,
-      message,
-      sound,
-      timeout,
+    // PowerShell with BurntToast module or fallback to basic toast
+    // Using .NET NotifyIcon as ultimate fallback (always available)
+    const psScript = `
+      [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
+      [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom, ContentType = WindowsRuntime] | Out-Null
+      
+      $template = @"
+      <toast>
+        <visual>
+          <binding template="ToastGeneric">
+            <text>${title.replace(/"/g, '""')}</text>
+            <text>${message.replace(/"/g, '""')}</text>
+          </binding>
+        </visual>
+        <audio src="ms-winsoundevent:Notification.Default"/>
+      </toast>
+"@
+      
+      $xml = New-Object Windows.Data.Xml.Dom.XmlDocument
+      $xml.LoadXml($template)
+      $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
+      [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier("OpenCode").Show($toast)
+    `
+
+    const proc = Bun.spawn(
+      ["powershell", "-NoProfile", "-NonInteractive", "-Command", psScript],
+      { stdout: "ignore", stderr: "pipe" }
+    )
+
+    void proc.exited.then((exitCode) => {
+      if (exitCode !== 0) {
+        // Fallback to BalloonTip if toast fails (older Windows)
+        sendWindowsBalloonFallback(title, message)
+      }
     })
   } catch {
-    console.warn(
-      "opencodev2-notification: node-notifier not available. Install with: npm install -g node-notifier"
-    )
+    // Ultimate fallback: BalloonTip (works on all Windows versions)
+    sendWindowsBalloonFallback(title, message)
   }
 }
 
+/**
+ * Windows fallback: Use .NET NotifyIcon BalloonTip (works on all Windows)
+ */
+async function sendWindowsBalloonFallback(title: string, message: string): Promise<void> {
+  try {
+    const psScript = `
+      Add-Type -AssemblyName System.Windows.Forms
+      $notify = New-Object System.Windows.Forms.NotifyIcon
+      $notify.Icon = [System.Drawing.SystemIcons]::Information
+      $notify.BalloonTipTitle = "${title.replace(/"/g, '""')}"
+      $notify.BalloonTipText = "${message.replace(/"/g, '""')}"
+      $notify.BalloonTipIcon = 'Info'
+      $notify.Visible = $true
+      $notify.ShowBalloonTip(5000)
+      Start-Sleep -Seconds 6
+      $notify.Dispose()
+    `
+    await Bun.spawn(["powershell", "-NoProfile", "-NonInteractive", "-Command", psScript], {
+      stdout: "ignore",
+      stderr: "ignore",
+    })
+  } catch {
+    // Silent fail
+  }
+}
+
+/**
+ * Linux: Use built-in notify-send or dbus-send
+ * notify-send is pre-installed on most desktop Linux distributions
+ * dbus-send is a fallback that works on any D-Bus enabled system
+ */
+async function sendLinuxNotification(
+  title: string,
+  message: string,
+  sound: string
+): Promise<void> {
+  // Try notify-send first (most common)
+  const notifySendPath = Bun.which("notify-send")
+  
+  if (notifySendPath) {
+    try {
+      const proc = Bun.spawn(
+        [notifySendPath, "-a", "OpenCode", "-u", "normal", title, message],
+        { stdout: "ignore", stderr: "pipe" }
+      )
+
+      void proc.exited.then((exitCode) => {
+        if (exitCode !== 0) {
+          // Fallback to dbus-send
+          sendLinuxDBusFallback(title, message)
+        }
+      })
+      return
+    } catch {
+      // Fall through to dbus-send
+    }
+  }
+
+  // Fallback: dbus-send (works on any D-Bus system)
+  await sendLinuxDBusFallback(title, message)
+}
+
+/**
+ * Linux fallback: Use dbus-send to call notification service directly
+ */
+async function sendLinuxDBusFallback(title: string, message: string): Promise<void> {
+  try {
+    const proc = Bun.spawn(
+      [
+        "dbus-send",
+        "--session",
+        "--type=method_call",
+        "--dest=org.freedesktop.Notifications",
+        "/org/freedesktop/Notifications",
+        "org.freedesktop.Notifications.Notify",
+        "string:opencode", // app_name
+        "uint32:0", // replaces_id
+        "string:", // app_icon
+        "string:" + title, // summary
+        "string:" + message, // body
+        "array:string:", // actions
+        "dict:string:variant:", // hints
+        "int32:5000", // expire_timeout
+      ],
+      { stdout: "ignore", stderr: "ignore" }
+    )
+
+    void proc.exited // Just fire and forget
+  } catch {
+    // Silent fail - notification best effort
+  }
+}
+
+/**
+ * Main notification dispatcher - uses native OS APIs only
+ */
 async function sendNotification(
   title: string,
   message: string,
@@ -304,17 +436,18 @@ async function sendNotification(
   terminalInfo: TerminalInfo,
   timeout: number
 ): Promise<void> {
-  if (process.platform === "darwin") {
-    await sendMacOSNotification(
-      title,
-      message,
-      subtitle,
-      sound,
-      terminalInfo.bundleId,
-      timeout
-    )
-  } else {
-    await sendNodeNotifierNotification(title, message, sound, timeout)
+  switch (process.platform) {
+    case "darwin":
+      await sendMacOSNotification(title, message, subtitle, sound, timeout)
+      break
+    case "win32":
+      await sendWindowsNotification(title, message, sound)
+      break
+    case "linux":
+      await sendLinuxNotification(title, message, sound)
+      break
+    default:
+      console.warn(`opencodev2-notification: unsupported platform ${process.platform}`)
   }
 }
 

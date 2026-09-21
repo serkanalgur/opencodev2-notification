@@ -11,7 +11,8 @@ You delegate a task and switch to another window. Now you're checking back every
 This plugin solves that:
 
 - **Stay focused** - Work in other apps. A notification arrives when the AI needs you.
-- **Native OS notifications** - Uses macOS Notification Center, Windows Toast, and Linux notify-send.
+- **Zero dependencies** - Uses only built-in OS APIs (osascript, PowerShell, notify-send)
+- **Native OS notifications** - macOS Notification Center, Windows Toast, Linux Desktop Notifications
 - **Smart defaults** - Won't spam you. Only notifies for meaningful events with parent-session filtering and quiet-hours support.
 
 ## Installation
@@ -54,27 +55,21 @@ The plugin automatically:
 
 Question notifications bypass macOS focus suppression so direct prompts are not missed.
 
-## Native OS Notification Paths
+## Zero Dependencies - Pure Native!
 
-- **macOS:** Notification Center via [`vjeantet/alerter`](https://github.com/vjeantet/alerter) (`alerter` must be on `PATH`, macOS 13+)
-- **Windows:** Toast notifications via `node-notifier`
-- **Linux:** `notify-send` via `node-notifier`
+This plugin uses **built-in OS APIs** only. No external packages to install!
 
-### macOS Setup
+| Platform | Method | Requirements |
+|----------|--------|--------------|
+| **macOS** | `osascript` (AppleScript) | Built into macOS since 10.0 |
+| **Windows** | PowerShell Toast/BalloonTip | Built into Windows 7+ |
+| **Linux** | `notify-send` / `dbus-send` | Pre-installed on most desktop distros |
 
-Install `alerter`:
+### How It Works
 
-```bash
-brew install vjeantet/tap/alerter
-```
-
-### Windows/Linux Setup
-
-Install `node-notifier`:
-
-```bash
-npm install -g node-notifier
-```
+- **macOS:** Uses `osascript -e 'display notification ...'` - native Notification Center
+- **Windows:** Uses PowerShell with .NET Toast notifications (or BalloonTip fallback)
+- **Linux:** Uses `notify-send` (or `dbus-send` as fallback for minimal systems)
 
 ## Platform Support
 
