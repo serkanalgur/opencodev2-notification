@@ -33,7 +33,7 @@
   ],
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "bun run test-notification.ts",
+    "test": "node --import tsx test-notification.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
