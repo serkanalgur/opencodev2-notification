@@ -1,6 +1,6 @@
 {
   "name": "@serkanalgur/opencodev2-notification",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Native OS notifications for OpenCode V2 - know when tasks complete, errors occur, or the AI needs your input",
   "keywords": [
     "opencode",
@@ -37,7 +37,6 @@
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
-  "dependencies": {},
   "devDependencies": {
     "@opencode/plugin": "^2.0.0",
     "@types/bun": "latest",
