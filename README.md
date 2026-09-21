@@ -51,10 +51,9 @@ Or copy the plugin files to your `.opencode/plugins/` directory:
 
 | Event | Notifies? | Sound | Why |
 |-------|-----------|-------|-----|
-| Session complete | Yes | Glass | Main task done - time to review |
-| Session error | Yes | Basso | Something broke - needs attention |
-| Permission needed | Yes | Submarine | AI is blocked, waiting for you |
-| Question asked | Yes | Submarine (default) | Questions should always reach you promptly |
+| Session complete | Yes | done | Main task done - time to review |
+| Session error | Yes | error | Something broke - needs attention |
+| Permission needed | Yes | permission | AI is blocked, waiting for you |
 | Sub-task complete/error | No (default) | - | Set `notifyChildSessions: true` to include child sessions |
 
 The plugin automatically:
@@ -79,10 +78,9 @@ Works out of the box. To customize, create `~/.config/opencode/opencodev2-notifi
 {
   "notifyChildSessions": false,
   "sounds": {
-    "idle": "Glass",
-    "error": "Basso",
-    "permission": "Submarine",
-    "question": "Submarine"
+    "idle": "done",
+    "error": "error",
+    "permission": "permission"
   },
   "quietHours": {
     "enabled": false,
@@ -97,17 +95,16 @@ Works out of the box. To customize, create `~/.config/opencode/opencodev2-notifi
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `notifyChildSessions` | boolean | `false` | Include child/sub-session notifications |
-| `sounds.idle` | string | `"Glass"` | Sound for session complete |
-| `sounds.error` | string | `"Basso"` | Sound for errors |
-| `sounds.permission` | string | `"Submarine"` | Sound for permission requests |
-| `sounds.question` | string | `"Submarine"` | Sound for questions |
+| `sounds.idle` | string | `"done"` | Sound for session complete |
+| `sounds.error` | string | `"error"` | Sound for errors |
+| `sounds.permission` | string | `"permission"` | Sound for permission requests |
 | `quietHours.enabled` | boolean | `false` | Enable quiet hours |
 | `quietHours.start` | string | `"22:00"` | Quiet hours start (HH:MM) |
 | `quietHours.end` | string | `"08:00"` | Quiet hours end (HH:MM) |
 
-### Available macOS Sounds
+### Available Sound Names
 
-Basso, Blow, Bottle, Frog, Funk, Glass, Hero, Morse, Ping, Pop, Purr, Sosumi, Submarine, Tink
+`default`, `question`, `permission`, `error`, `done`, `subagent_done`
 
 ## FAQ
 

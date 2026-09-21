@@ -22,15 +22,16 @@ import { Plugin } from "@opencode/plugin/tui"
 // TYPES
 // ==========================================
 
+type AttentionSoundName = "default" | "question" | "permission" | "error" | "done" | "subagent_done"
+
 interface NotifyConfig {
   /** Notify for child/sub-session events (default: false) */
   notifyChildSessions: boolean
   /** Sound configuration per event type */
   sounds: {
-    idle: string
-    error: string
-    permission: string
-    question?: string
+    idle: AttentionSoundName
+    error: AttentionSoundName
+    permission: AttentionSoundName
   }
   /** Quiet hours configuration */
   quietHours: {
@@ -38,8 +39,6 @@ interface NotifyConfig {
     start: string // "HH:MM" format
     end: string // "HH:MM" format
   }
-  /** Override terminal detection (optional) */
-  terminal?: string
 }
 
 // ==========================================
@@ -49,9 +48,9 @@ interface NotifyConfig {
 const DEFAULT_CONFIG: NotifyConfig = {
   notifyChildSessions: false,
   sounds: {
-    idle: "Glass",
-    error: "Basso",
-    permission: "Submarine",
+    idle: "done",
+    error: "error",
+    permission: "permission",
   },
   quietHours: {
     enabled: false,
@@ -125,7 +124,6 @@ function isQuietHours(config: NotifyConfig): boolean {
 
 type RecentNotifications = Map<string, number>
 
-const QUESTION_DEDUPE_WINDOW_MS = 1500
 const READY_DEDUPE_WINDOW_MS = 1500
 const PERMISSION_DEDUPE_WINDOW_MS = 1500
 
@@ -169,7 +167,6 @@ export default Plugin.define({
     const config = await loadConfig()
 
     // Deduplication maps
-    const recentQuestionNotifications: RecentNotifications = new Map()
     const recentReadyNotifications: RecentNotifications = new Map()
     const recentPermissionNotifications: RecentNotifications = new Map()
 
@@ -193,7 +190,7 @@ export default Plugin.define({
     const sendNotification = async (
       title: string,
       message: string,
-      soundName: string
+      soundName: AttentionSoundName
     ): Promise<void> => {
       try {
         await context.attention.notify({
@@ -245,9 +242,9 @@ export default Plugin.define({
       })
     )
 
-    // Session error
+    // Session execution failed
     unsubscribers.push(
-      context.data.on("session.error", async (event) => {
+      context.data.on("session.execution.failed", async (event) => {
         const sessionID = toNonEmptyString(event.data.sessionID)
         if (!sessionID) return
 
@@ -260,12 +257,7 @@ export default Plugin.define({
         if (isQuietHours(config)) return
 
         const error = event.data.error
-        const errorMessage =
-          typeof error === "string"
-            ? error.slice(0, 100)
-            : error
-              ? String(error).slice(0, 100)
-              : "Something went wrong"
+        const errorMessage = (error.message ?? "Something went wrong").slice(0, 100)
 
         await sendNotification(
           "Something went wrong",
@@ -303,16 +295,16 @@ export default Plugin.define({
       })
     )
 
-    // Permission updated (when user responds)
+    // Permission replied (when user responds)
     unsubscribers.push(
-      context.data.on("permission.updated", async (event) => {
+      context.data.on("permission.replied", async (event) => {
         // Check quiet hours
         if (isQuietHours(config)) return
 
         // Deduplication
-        const permissionKey = toNonEmptyString(event.data.id)
-          ? `permission:updated:${event.data.id}`
-          : `permission-update:${Date.now()}`
+        const permissionKey = toNonEmptyString(event.data.requestID)
+          ? `permission:replied:${event.data.requestID}`
+          : `permission-reply:${Date.now()}`
         if (
           !shouldSendDedupedNotification(
             recentPermissionNotifications,
@@ -327,35 +319,6 @@ export default Plugin.define({
           "Permission Updated",
           "Your input has been recorded",
           config.sounds.permission
-        )
-      })
-    )
-
-    // Question asked (when AI asks a question)
-    unsubscribers.push(
-      context.data.on("question.asked", async (event) => {
-        // Check quiet hours
-        if (isQuietHours(config)) return
-
-        // Deduplication
-        const questionKey = toNonEmptyString(event.data.id)
-          ? `question:request:${event.data.id}`
-          : `question:${Date.now()}`
-        if (
-          !shouldSendDedupedNotification(
-            recentQuestionNotifications,
-            questionKey,
-            QUESTION_DEDUPE_WINDOW_MS
-          )
-        ) {
-          return
-        }
-
-        const sound = config.sounds.question ?? config.sounds.permission
-        await sendNotification(
-          "Question for you",
-          "OpenCode needs your input",
-          sound
         )
       })
     )
