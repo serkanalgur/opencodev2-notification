@@ -1,4 +1,4 @@
-# opencodev2-notification
+# @serkanalgur/opencodev2-notification
 
 > Native OS notifications for OpenCode V2
 
@@ -17,12 +17,8 @@ This plugin solves that:
 
 ## Installation
 
-### As a local plugin
-
-Copy the plugin files to your `.opencode/plugins/` directory:
-
-```
-.opencode/plugins/notification/index.ts
+```bash
+npm install @serkanalgur/opencodev2-notification
 ```
 
 ### Via opencode.json
@@ -31,8 +27,16 @@ Add to your `opencode.json` or `opencode.jsonc`:
 
 ```jsonc
 {
-  "plugins": ["./plugins/notification"]
+  "plugins": ["@serkanalgur/opencodev2-notification"]
 }
+```
+
+### As a local plugin
+
+Or copy the plugin files to your `.opencode/plugins/` directory:
+
+```
+.opencode/plugins/notification/index.ts
 ```
 
 ## How It Works

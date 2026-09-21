@@ -1,13 +1,7 @@
 {
-  "name": "opencodev2-notification",
+  "name": "@serkanalgur/opencodev2-notification",
   "version": "1.0.0",
   "description": "Native OS notifications for OpenCode V2 - know when tasks complete, errors occur, or the AI needs your input",
-  "type": "module",
-  "main": "src/index.ts",
-  "scripts": {
-    "test": "bun run test-notification.ts",
-    "typecheck": "bunx tsc --noEmit"
-  },
   "keywords": [
     "opencode",
     "opencode-plugin",
@@ -17,21 +11,40 @@
     "linux",
     "typescript"
   ],
-  "author": "serkanalgur",
-  "license": "MIT",
-  "dependencies": {
-    "@opencode/plugin": "latest"
-  },
-  "devDependencies": {
-    "@types/bun": "latest",
-    "typescript": "^5.0.0"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/serkanalgur/opencodev2-notification.git"
-  },
+  "homepage": "https://github.com/serkanalgur/opencodev2-notification#readme",
   "bugs": {
     "url": "https://github.com/serkanalgur/opencodev2-notification/issues"
   },
-  "homepage": "https://github.com/serkanalgur/opencodev2-notification#readme"
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/serkanalgur/opencodev2-notification.git"
+  },
+  "license": "MIT",
+  "author": "serkanalgur",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "main": "src/index.ts",
+  "files": [
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "bun run test-notification.ts",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@opencode/plugin": "^2.0.0",
+    "@types/bun": "latest",
+    "prettier": "^3.4.0",
+    "typescript": "^5.7.0"
+  },
+  "peerDependencies": {
+    "@opencode/plugin": ">=2.0.0"
+  }
 }
