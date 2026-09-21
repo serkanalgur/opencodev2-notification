@@ -2,13 +2,13 @@
 
 [![npm version](https://img.shields.io/npm/v/@serkanalgur/opencodev2-notification.svg)](https://www.npmjs.com/package/@serkanalgur/opencodev2-notification)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![OpenCode Plugin](https://img.shields.io/badge/OpenCode-Plugin-blue.svg)](https://opencode.ai)
+[![OpenCode Plugin](https://img.shields.io/badge/OpenCode-V2%20Plugin-blue.svg)](https://opencode.ai)
 [![GitHub stars](https://img.shields.io/github/stars/serkanalgur/opencodev2-notification)](https://github.com/serkanalgur/opencodev2-notification/stargazers)
 [![GitHub issues](https://img.shields.io/github/issues/serkanalgur/opencodev2-notification)](https://github.com/serkanalgur/opencodev2-notification/issues)
 
 > Native OS notifications for OpenCode V2
 
-A plugin for [OpenCode V2](https://opencode.ai) that delivers native OS notifications when tasks complete, errors occur, or the AI needs your input.
+A CLI plugin for [OpenCode V2](https://opencode.ai) that delivers native OS notifications when tasks complete, errors occur, or the AI needs your input.
 
 ## Why This Exists
 
@@ -17,9 +17,9 @@ You delegate a task and switch to another window. Now you're checking back every
 This plugin solves that:
 
 - **Stay focused** - Work in other apps. A notification arrives when the AI needs you.
-- **Zero dependencies** - Uses only built-in OS APIs (osascript, PowerShell, notify-send)
-- **Native OS notifications** - macOS Notification Center, Windows Toast, Linux Desktop Notifications
+- **Uses OpenCode's built-in attention API** - Native notifications on all platforms
 - **Smart defaults** - Won't spam you. Only notifies for meaningful events with parent-session filtering and quiet-hours support.
+- **Lightweight** - Event-driven, no tools added to your conversation
 
 ## Installation
 
@@ -59,36 +59,17 @@ Or copy the plugin files to your `.opencode/plugins/` directory:
 
 The plugin automatically:
 
-1. Detects your terminal emulator
-2. Suppresses notifications when your terminal is focused on macOS
-3. Enables click-to-focus on macOS (click notification → terminal foregrounds)
-
-Question notifications bypass macOS focus suppression so direct prompts are not missed.
-
-## Zero Dependencies - Pure Native!
-
-This plugin uses **built-in OS APIs** only. No external packages to install!
-
-| Platform | Method | Requirements |
-|----------|--------|--------------|
-| **macOS** | `osascript` (AppleScript) | Built into macOS since 10.0 |
-| **Windows** | PowerShell Toast/BalloonTip | Built into Windows 7+ |
-| **Linux** | `notify-send` / `dbus-send` | Pre-installed on most desktop distros |
-
-### How It Works
-
-- **macOS:** Uses `osascript -e 'display notification ...'` - native Notification Center
-- **Windows:** Uses PowerShell with .NET Toast notifications (or BalloonTip fallback)
-- **Linux:** Uses `notify-send` (or `dbus-send` as fallback for minimal systems)
+1. Uses OpenCode's built-in `attention.notify()` API for native notifications
+2. Only notifies when terminal is not focused (no spam while you're working)
+3. Deduplicates rapid-fire notifications
 
 ## Platform Support
 
-| Feature | macOS | Windows | Linux |
-|---------|-------|---------|-------|
-| Native OS notifications | Yes | Yes | Yes |
-| Custom sounds | Yes | No | No |
-| Focus detection | Yes | No | No |
-| Click-to-focus | Yes | No | No |
+| Platform | Method | Status |
+|----------|--------|--------|
+| **macOS** | Notification Center | ✅ Full support |
+| **Windows** | Toast notifications | ✅ Full support |
+| **Linux** | Desktop notifications | ✅ Full support |
 
 ## Configuration (Optional)
 
@@ -97,8 +78,6 @@ Works out of the box. To customize, create `~/.config/opencode/opencodev2-notifi
 ```json
 {
   "notifyChildSessions": false,
-  "timeout": 0,
-  "terminal": "ghostty",
   "sounds": {
     "idle": "Glass",
     "error": "Basso",
@@ -118,8 +97,6 @@ Works out of the box. To customize, create `~/.config/opencode/opencodev2-notifi
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | `notifyChildSessions` | boolean | `false` | Include child/sub-session notifications |
-| `timeout` | number | `0` | Seconds before notification disappears (0 = no timeout) |
-| `terminal` | string | auto-detect | Override terminal auto-detection |
 | `sounds.idle` | string | `"Glass"` | Sound for session complete |
 | `sounds.error` | string | `"Basso"` | Sound for errors |
 | `sounds.permission` | string | `"Submarine"` | Sound for permission requests |
@@ -144,7 +121,7 @@ No. Smart defaults prevent noise:
 
 - Only notifies for parent sessions (not every sub-task)
 - Supports quiet-hours suppression
-- Suppresses when your terminal is the active window on macOS
+- Only notifies when terminal is not focused
 - Deduplication prevents rapid-fire notifications
 
 ### Can I disable it temporarily?
