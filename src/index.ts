@@ -163,6 +163,14 @@ function toNonEmptyString(value: unknown): string | null {
 export default Plugin.define({
   id: "opencodev2-notification",
   async setup(context) {
+    // This plugin requires the TUI context (data + attention APIs).
+    // OpenCode loads plugins on the server process first where these are unavailable.
+    // Bail out gracefully — the TUI will load a separate instance with full context.
+    const ctx = context as any
+    if (!ctx.data || !ctx.attention) {
+      return
+    }
+
     // Load config at startup
     const config = await loadConfig()
 
