@@ -201,12 +201,21 @@ export default Plugin.define({
       soundName: AttentionSoundName
     ): Promise<void> => {
       try {
-        await context.attention.notify({
+        const result = await context.attention.notify({
           title,
           message,
           notification: { when: "blurred" },
           sound: { name: soundName, volume: 1, when: "always" },
         })
+        // Surface helpful diagnostics instead of failing silently
+        if (result?.skipped === "attention_disabled") {
+          console.warn(
+            "opencodev2-notification: attention is disabled. Enable it in ~/.config/opencode/cli.json:\n" +
+              '  "attention": { "notifications": true, "sound": true }'
+          )
+        } else if (result && !result.ok) {
+          console.debug("opencodev2-notification: notification skipped:", result)
+        }
       } catch (error) {
         console.error("opencodev2-notification: failed to send notification:", error)
       }
@@ -252,8 +261,8 @@ export default Plugin.define({
 
     // Session execution failed
     unsubscribers.push(
-      context.data.on("session.execution.failed", async (event) => {
-        const sessionID = toNonEmptyString(event.data.sessionID)
+      context.data.on("session.error" as never, async (event: any) => {
+        const sessionID = toNonEmptyString(event.data?.sessionID)
         if (!sessionID) return
 
         // Check parent session
@@ -264,8 +273,8 @@ export default Plugin.define({
         // Check quiet hours
         if (isQuietHours(config)) return
 
-        const error = event.data.error
-        const errorMessage = (error.message ?? "Something went wrong").slice(0, 100)
+        const error = event.data?.error
+        const errorMessage = (error?.message ?? "Something went wrong").slice(0, 100)
 
         await sendNotification(
           "Something went wrong",
