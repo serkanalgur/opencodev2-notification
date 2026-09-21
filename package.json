@@ -24,9 +24,9 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./tui": "./src/tui.ts"
+    "./tui": "./src/tui.tsx"
   },
-  "main": "src/index.ts",
+  "main": "./src/index.ts",
   "files": [
     "src/",
     "README.md",
