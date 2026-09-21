@@ -1,5 +1,11 @@
 # @serkanalgur/opencodev2-notification
 
+[![npm version](https://img.shields.io/npm/v/@serkanalgur/opencodev2-notification.svg)](https://www.npmjs.com/package/@serkanalgur/opencodev2-notification)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![OpenCode Plugin](https://img.shields.io/badge/OpenCode-Plugin-blue.svg)](https://opencode.ai)
+[![GitHub stars](https://img.shields.io/github/stars/serkanalgur/opencodev2-notification)](https://github.com/serkanalgur/opencodev2-notification/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/serkanalgur/opencodev2-notification)](https://github.com/serkanalgur/opencodev2-notification/issues)
+
 > Native OS notifications for OpenCode V2
 
 A plugin for [OpenCode V2](https://opencode.ai) that delivers native OS notifications when tasks complete, errors occur, or the AI needs your input.
